@@ -32,6 +32,7 @@ import android.content.ComponentName;
 import android.content.ContentResolver;
 import android.content.Context;
 import android.content.Intent;
+import android.util.BoostFramework;
 import android.content.pm.ApplicationInfo;
 import android.content.pm.PackageManager;
 import android.content.res.Resources;
@@ -39,6 +40,7 @@ import android.database.ContentObserver;
 import android.media.AudioManager;
 import android.net.Uri;
 import android.os.Handler;
+import android.os.SystemProperties;
 import android.os.Looper;
 import android.os.RemoteException;
 import android.os.Process;
@@ -73,6 +75,7 @@ public class GamingModeController {
     private boolean mGamingModeActivated;
     private static int mRingerState;
     private static int mZenState;
+    private BoostFramework mPerf = null;    
     private static int mHwKeysState;
     private static int mAdaptiveBrightness;
 
@@ -249,7 +252,7 @@ public class GamingModeController {
             mAdaptiveBrightness = isAdaptiveEnabledByUser ? SCREEN_BRIGHTNESS_MODE_AUTOMATIC : SCREEN_BRIGHTNESS_MODE_MANUAL;
             Settings.System.putInt(mContext.getContentResolver(),
                     Settings.System.SCREEN_BRIGHTNESS_MODE, SCREEN_BRIGHTNESS_MODE_MANUAL);
-        }
+       }
         // HW Buttons
         boolean disableHwKeys = Settings.System.getInt(mContext.getContentResolver(),
                     Settings.System.GAMING_MODE_HW_KEYS_TOGGLE, 0) == 1;
@@ -259,6 +262,23 @@ public class GamingModeController {
             Settings.System.putInt(mContext.getContentResolver(),
                 Settings.System.NAVIGATION_BAR_SHOW, 1);
         }
+
+        boolean performancemode = Settings.System.getInt(mContext.getContentResolver(),
+                    Settings.System.GAMING_MODE_PERFORMANCE_TOGGLE, 1) == 1;
+        if (performancemode) {
+        if (mPerf == null) {
+            mPerf = new BoostFramework();
+        }
+        if (mPerf != null) {
+            mPerf.perfHint(BoostFramework.VENDOR_HINT_PERFORMANCE_MODE, null, Integer.MAX_VALUE, -1);
+        }
+        }
+
+        boolean fpsmode = Settings.System.getInt(mContext.getContentResolver(),
+                    Settings.System.GAMING_MODE_FPS_TOGGLE, 1) == 1;
+        if (fpsmode) {
+             SystemProperties.set("vendor.fps.boost", "true");
+        }                    
 
         // Ringer mode (0: Off, 1: Vibrate, 2:DND: 3:Silent)
         int ringerMode = Settings.System.getInt(mContext.getContentResolver(),
@@ -296,12 +316,21 @@ public class GamingModeController {
             Settings.System.putInt(mContext.getContentResolver(),
                     Settings.System.SCREEN_BRIGHTNESS_MODE, mAdaptiveBrightness);
         }
+
         boolean disableHwKeys = Settings.System.getInt(mContext.getContentResolver(),
                     Settings.System.GAMING_MODE_HW_KEYS_TOGGLE, 0) == 1;
         if (disableHwKeys) {
             Settings.System.putInt(mContext.getContentResolver(),
                 Settings.System.NAVIGATION_BAR_SHOW, mHwKeysState);
         }
+
+        boolean perfmode  = SystemProperties.get("perf.mode.enabled", "0").equals("0");
+        if (perfmode) {
+
+        SystemProperties.set("restart.perf.service", "1");
+        }
+        SystemProperties.set("vendor.fps.boost", "false");
+
         int ringerMode = Settings.System.getInt(mContext.getContentResolver(),
                  Settings.System.GAMING_MODE_RINGER_MODE, 0);
         if (ringerMode != 0 && (mRingerState != getRingerModeInternal() ||

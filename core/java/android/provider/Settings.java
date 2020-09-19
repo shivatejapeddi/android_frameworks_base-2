@@ -5503,6 +5503,7 @@ public final class Settings {
          * @hide
          */
         public static final String GAMING_MODE_VALUES = "gaming_mode_values";
+        
         /**
          * Package name of apps for enabling Gaming mode
          * @hide
@@ -5546,7 +5547,19 @@ public final class Settings {
          */
         public static final String GAMING_MODE_DYNAMIC_STATE = "gaming_mode_dynamic_state";
 
-	/**
+        /**
+         * Whether to lock brightness in gaming mode
+         * @hide
+         */
+        public static final String GAMING_MODE_PERFORMANCE_TOGGLE = "gaming_mode_performance_toggle";
+
+        /**
+         * Whether to lock brightness in gaming mode
+         * @hide
+         */
+        public static final String GAMING_MODE_FPS_TOGGLE = "gaming_mode_fps_toggle";  
+        
+        /**
          * @hide
          */
         public static final String ROAMING_INDICATOR_ICON = "roaming_indicator_icon";
