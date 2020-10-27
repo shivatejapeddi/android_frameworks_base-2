@@ -41,6 +41,7 @@ import com.android.systemui.qs.tiles.DataSwitchTile;
 import com.android.systemui.qs.tiles.DndTile;
 import com.android.systemui.qs.tiles.FlashlightTile;
 import com.android.systemui.qs.tiles.GamingModeTile;
+import com.android.systemui.qs.tiles.GoogleServicesTile;
 import com.android.systemui.qs.tiles.HeadsUpTile;
 import com.android.systemui.qs.tiles.HotspotTile;
 import com.android.systemui.qs.tiles.LiveDisplayTile;
@@ -63,6 +64,9 @@ import javax.inject.Provider;
 import javax.inject.Singleton;
 
 import dagger.Lazy;
+import com.android.systemui.qs.tiles.AggressiveIdleTile;
+import com.android.systemui.qs.tiles.ExtremeIdleTile;
+import com.android.systemui.qs.tiles.StaminaModeTile;
 
 @Singleton
 public class QSFactoryImpl implements QSFactory {
@@ -100,7 +104,8 @@ public class QSFactoryImpl implements QSFactory {
     private final Provider<GamingModeTile> mGamingModeTileProvider;
     private final Provider<RebootTile> mRebootTileProvider;
     private final Provider<CompassTile> mCompassTileProvider;
-    
+    private final Provider<GoogleServicesTile> mGoogleServicesTileProvider;
+
 
     private final Lazy<QSHost> mQsHostLazy;
 
@@ -136,7 +141,8 @@ public class QSFactoryImpl implements QSFactory {
             Provider<AntiFlickerTile> antiFlickerTileProvider,
             Provider<GamingModeTile> gamingModeTileProvider,
             Provider<RebootTile> rebootTileProvider,
-            Provider<CompassTile> compassTileProvider) {
+            Provider<CompassTile> compassTileProvider,
+            Provider<GoogleServicesTile> googleServicesTileProvider) {
         mQsHostLazy = qsHostLazy;
         mWifiTileProvider = wifiTileProvider;
         mBluetoothTileProvider = bluetoothTileProvider;
@@ -169,6 +175,7 @@ public class QSFactoryImpl implements QSFactory {
         mGamingModeTileProvider = gamingModeTileProvider;
         mRebootTileProvider = rebootTileProvider;
         mCompassTileProvider = compassTileProvider;
+        mGoogleServicesTileProvider = googleServicesTileProvider;
     }
 
     public QSTile createTile(String tileSpec) {
@@ -242,6 +249,14 @@ public class QSFactoryImpl implements QSFactory {
                 return mRebootTileProvider.get();
             case "compass":
                 return mCompassTileProvider.get();
+            case "aggressive_idle":
+                return new AggressiveIdleTile(mQsHostLazy.get());
+            case "extreme_idle":
+                return new ExtremeIdleTile(mQsHostLazy.get());
+            case "stamina_mode":
+                return new StaminaModeTile(mQsHostLazy.get());
+            case "gms":
+                return mGoogleServicesTileProvider.get();
         }
 
         // Custom tiles

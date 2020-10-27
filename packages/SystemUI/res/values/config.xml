@@ -114,7 +114,7 @@
 
     <!-- Tiles native to System UI. Order should match "quick_settings_tiles_default" -->
     <string name="quick_settings_tiles_stock" translatable="false">
-        wifi,cell,battery,dnd,flashlight,rotation,bt,airplane,location,hotspot,inversion,saver,dark,work,cast,livedisplay,night,screenrecord,reverse,nfc,caffeine,aod,heads_up,dataswitch,sound,reading_mode,anti_flicker,gaming,reboot,compass
+        wifi,cell,battery,dnd,flashlight,rotation,bt,airplane,location,hotspot,inversion,saver,dark,work,cast,livedisplay,night,screenrecord,reverse,nfc,caffeine,aod,heads_up,dataswitch,sound,reading_mode,anti_flicker,gaming,reboot,compass,aggressive_idle,extreme_idle,stamina_mode
     </string>
 
     <!-- The tiles to display in QuickSettings -->
@@ -591,4 +591,29 @@
     <bool name="config_showNotificationForUnknownBatteryState">false</bool>
     <!-- content URL in a notification when ACTION_BATTERY_CHANGED.EXTRA_PRESENT field is false -->
     <string translatable="false" name="config_batteryStateUnknownUrl"></string>
+
+    <!-- Whether to show VoLTE icon in the status bar -->
+    <bool name="config_display_volte">true</bool>
+
+    <!-- The SYS temperature sensor path, defaults to empty -->
+    <string name="config_sysTempSensor" translatable="false"></string>
+    <!-- The BAT temperature sensor path, defaults to empty -->
+    <string name="config_batTempSensor" translatable="false"></string>
+
+    <!-- The CPU temperature sensor path, defaults to empty -->
+    <string name="config_cpuTempSensor" translatable="false"></string>
+
+    <!-- The CPU temperature divider, if needed -->
+    <integer name="config_cpuTempDivider" translatable="false">1</integer>
+
+    <!-- The CPU temperature sensor path, defaults to empty -->
+    <string name="config_batCurrent" translatable="false"></string>
+
+    <!-- The CPU temperature sensor path, defaults to empty -->
+    <string name="config_cpuTempSensorPrefix" translatable="false"></string>
+    <!-- The CPU temperature sensor path, defaults to empty -->
+    <string name="config_cpuTempSensorSuffix" translatable="false"></string>
+    <!-- The CPU temperature sensor path, defaults to empty -->
+    <string name="config_cpuTempSensorNumber" translatable="false"></string>
+
 </resources>

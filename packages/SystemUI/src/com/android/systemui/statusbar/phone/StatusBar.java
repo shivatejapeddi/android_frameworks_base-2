@@ -1269,6 +1269,7 @@ public class StatusBar extends SystemUI implements DemoMode,
                     checkBarModes();
                     mBurnInProtectionController =
                         new BurnInProtectionController(mContext, this, mStatusBarView);
+                handleCutout(null);
                 }).getFragmentManager()
                 .beginTransaction()
                 .replace(R.id.status_bar_container, new CollapsedStatusBarFragment(),

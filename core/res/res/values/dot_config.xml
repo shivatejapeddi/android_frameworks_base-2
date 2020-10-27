@@ -251,4 +251,9 @@
 
     <!-- Whether doze feature is enabled by default in settings -->
     <bool name="config_dozeDefaultEnabled">true</bool>
+
+    <integer name="config_buttonBrightnessSettingMinimum">0</integer>
+    <integer name="config_buttonBrightnessSettingMaximum">255</integer>
+    <integer name="config_buttonBrightnessSettingDefault">128</integer>
+        
 </resources>
