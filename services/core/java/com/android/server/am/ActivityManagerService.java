@@ -5227,6 +5227,7 @@ public class ActivityManagerService extends IActivityManager.Stub
             Slog.w(TAG, "startProcessLocked(2): from attachApplicationLocked:" + processName + ":" + app);
 
             if( BaikalSettings.getAppBlocked(app.uid, processName) ) {
+                Slog.w(TAG, "startProcessLocked(2): from attachApplicationLocked: blocked " + processName + ":" + app);
                 return false;
             }
 
@@ -6516,11 +6517,14 @@ public class ActivityManagerService extends IActivityManager.Stub
         }
 
         String retString = "UNKNOWN";
+        boolean blockedByBaikal = false;
 
         int ret = BaikalActivityServiceStatic.getAppStartModeLocked(uid,packageName, packageTargetSdk, callingPid, alwaysRestrict, disabledOnly, forcedStandby);
 
         if( ret == -1 ) {
             ret = getAppStartModeLockedInternal(uid,packageName, packageTargetSdk, callingPid, alwaysRestrict, disabledOnly, forcedStandby);
+        } else {
+            blockedByBaikal = true; 
         }
         switch(ret) {
             case ActivityManager.APP_START_MODE_NORMAL:
@@ -6543,7 +6547,8 @@ public class ActivityManagerService extends IActivityManager.Stub
                 " pkg=" + packageName + 
                 " always=" + alwaysRestrict + 
                 " force=" + forcedStandby + 
-                " ret=" + retString);
+                " ret=" + retString + 
+                " baikal=" + blockedByBaikal);
         }
         return ret;
     }
@@ -8536,7 +8541,7 @@ public class ActivityManagerService extends IActivityManager.Stub
             Slog.w(TAG, "startProcessLocked(4): addAppLocked: " + app);
 
             if( BaikalSettings.getAppBlocked(app.info.uid, app.info.packageName) ) {
-                Slog.w(TAG, "startProcessLocked(4): addAppLocked: " + app);
+                Slog.w(TAG, "startProcessLocked(4): addAppLocked: blocked " + app);
                 return null;
             }
 
@@ -15601,7 +15606,7 @@ public class ActivityManagerService extends IActivityManager.Stub
             Slog.w(TAG, "startProcessLocked(6): Bind backup: " + app);
 
             if( BaikalSettings.getAppBlocked(app.uid, app.packageName) ) {
-                Slog.w(TAG, "startProcessLocked(6): Bind backup: " + app);
+                Slog.w(TAG, "startProcessLocked(6): Bind backup: blocked " + app);
                 return false;
             }
 
@@ -16819,7 +16824,7 @@ public class ActivityManagerService extends IActivityManager.Stub
                     requiredPermissions, appOp, brOptions, registeredReceivers, resultTo,
                     resultCode, resultData, resultExtras, ordered, sticky, false, userId,
                     allowBackgroundActivityStarts, timeoutExempt);
-            if (DEBUG_BROADCAST) Slog.v(TAG_BROADCAST, "Enqueueing parallel broadcast " + r);
+            /*if (DEBUG_BROADCAST) */Slog.v(TAG_BROADCAST, "Enqueueing parallel broadcast " + r);
             final boolean replaced = replacePending
                     && (queue.replaceParallelBroadcastLocked(r) != null);
             // Note: We assume resultTo is null for non-ordered broadcasts.
@@ -19975,11 +19980,11 @@ public class ActivityManagerService extends IActivityManager.Stub
                     // started, the top priority can be applied immediately to avoid cpu being
                     // preempted by other processes before attaching the process of top app.
 
-                    Slog.w(TAG, "startProcessLocked(7): Start process(): " + info, new Throwable());
+                    Slog.w(TAG, "startProcessLocked(7): Start process(): " + info);
 
                     if(!isTop) {
                         if( BaikalSettings.getAppBlocked(info.uid, info.packageName) ) {
-                            Slog.w(TAG, "startProcessLocked(7): Start process(): blocked " + info, new Throwable());
+                            Slog.w(TAG, "startProcessLocked(7): Start process(): blocked " + info);
                             return;
                         }
                     }
@@ -20143,6 +20148,7 @@ public class ActivityManagerService extends IActivityManager.Stub
 
         @Override
         public boolean isPendingTopUid(int uid) {
+            if( BaikalSettings.getTopAppUid() == uid ) return true;
             return mPendingStartActivityUids.isPendingTopUid(uid);
         }
 

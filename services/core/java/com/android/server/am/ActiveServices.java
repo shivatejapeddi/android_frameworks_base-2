@@ -581,7 +581,12 @@ public final class ActiveServices {
         // If we're starting indirectly (e.g. from PendingIntent), figure out whether
         // we're launching into an app in a background state.  This keys off of the same
         // idleness state tracking as e.g. O+ background service start policy.
-        final boolean bgLaunch = !mAm.isUidActiveLocked(r.appInfo.uid);
+        boolean bgLaunch = !mAm.isUidActiveLocked(r.appInfo.uid);
+
+        if( BaikalSettings.getExtremeIdleEnabled() || BaikalSettings.getStaminaMode() ) {
+            bgLaunch = !(BaikalSettings.getTopAppUid() == r.appInfo.uid);
+        }
+        
 
         // If the app has strict background restrictions, we treat any bg service
         // start analogously to the legacy-app forced-restrictions case, regardless
@@ -621,7 +626,7 @@ public final class ActiveServices {
         }
 
 
-        if( BaikalSettings.getAppBlocked(callingUid, callingPackage) ) {
+        if( BaikalSettings.getAppBlocked(r.appInfo.uid, r.packageName) ) {
             Slog.w(TAG, "App start blocked: service "
                     + service + " to " + r.shortInstanceName
                     + " from pid=" + callingPid + " uid=" + callingUid
@@ -2887,6 +2892,11 @@ public final class ActiveServices {
             return false;
         }
 
+        if( r.stopIfKilled ) {
+            Slog.w(TAG, "Not scheduling restart of stopIfKilled service " + r.shortInstanceName
+                    + " - disabled");
+            return false;
+        }
 
         ServiceMap smap = getServiceMapLocked(r.userId);
         if (smap.mServicesByInstanceName.get(r.instanceName) != r) {
@@ -3243,7 +3253,7 @@ public final class ActiveServices {
             // TODO (chriswailes): Change the Zygote policy flags based on if the launch-for-service
             //  was initiated from a notification tap or not.
 
-            Slog.w(TAG, "startProcessLocked(10): Start service(): FG= " + execInFg + " " + r.appInfo);
+            Slog.w(TAG, "startProcessLocked(10): Start service(): FG=" + execInFg + " " + r.appInfo);
 
             if ((app=mAm.startProcessLocked(procName, r.appInfo, true, intentFlags,
                     hostingRecord, ZYGOTE_POLICY_FLAG_EMPTY, false, isolated, false)) == null) {
