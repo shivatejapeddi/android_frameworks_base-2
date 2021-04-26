@@ -184,6 +184,7 @@ public class DisplayRotation {
     @Surface.Rotation
     private int mUserRotation = Surface.ROTATION_0;
 
+
     /**
      * Flag that indicates this is a display that may run better when fixed to user rotation.
      */
@@ -895,7 +896,7 @@ public class DisplayRotation {
         if (!isDefaultDisplay) {
             return mUserRotationMode == WindowManagerPolicy.USER_ROTATION_LOCKED;
         }
-
+    
         return Settings.System.getIntForUser(mContext.getContentResolver(),
                 Settings.System.ACCELEROMETER_ROTATION, 0, UserHandle.USER_CURRENT) == 0;
     }
@@ -1604,6 +1605,7 @@ public class DisplayRotation {
             resolver.registerContentObserver(Settings.System.getUriFor(
                     Settings.System.USER_ROTATION), false, this,
                     UserHandle.USER_ALL);
+
             updateSettings();
         }
 

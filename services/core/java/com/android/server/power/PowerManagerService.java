@@ -1768,7 +1768,7 @@ public final class PowerManagerService extends SystemService
     }
 
     private boolean userActivityNoUpdateLocked(long eventTime, int event, int flags, int uid) {
-        if (DEBUG_SPEW) {
+        /*if (DEBUG_SPEW)*/ {
             Slog.d(TAG, "userActivityNoUpdateLocked: eventTime=" + eventTime
                     + ", event=" + event + ", flags=0x" + Integer.toHexString(flags)
                     + ", uid=" + uid);
@@ -2539,9 +2539,11 @@ public final class PowerManagerService extends SystemService
                                         keyboardBrightness : PowerManager.BRIGHTNESS_OFF_FLOAT);
                             }
                         }
+
                     } else {
                         nextTimeout = mLastUserActivityTime + screenOffTimeout;
                         if (now < nextTimeout) {
+                            if (DEBUG_SPEW) Slog.d(TAG, "updateUserActivitySummaryLocked: dim");
                             mUserActivitySummary = USER_ACTIVITY_SCREEN_DIM;
                             if (getWakefulnessLocked() == WAKEFULNESS_AWAKE) {
                                 if (mButtonsLight != null) {
@@ -2562,8 +2564,10 @@ public final class PowerManagerService extends SystemService
                     if (now < nextTimeout) {
                         if (mDisplayPowerRequest.policy == DisplayPowerRequest.POLICY_BRIGHT
                                 || mDisplayPowerRequest.policy == DisplayPowerRequest.POLICY_VR) {
+                            if (DEBUG_SPEW) Slog.d(TAG, "updateUserActivitySummaryLocked: bright no lights");
                             mUserActivitySummary = USER_ACTIVITY_SCREEN_BRIGHT;
                         } else if (mDisplayPowerRequest.policy == DisplayPowerRequest.POLICY_DIM) {
+                            if (DEBUG_SPEW) Slog.d(TAG, "updateUserActivitySummaryLocked: dim no lights");
                             mUserActivitySummary = USER_ACTIVITY_SCREEN_DIM;
                         }
                     }
