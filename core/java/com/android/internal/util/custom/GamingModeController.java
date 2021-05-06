@@ -74,8 +74,7 @@ public class GamingModeController {
 
     private boolean mGamingModeActivated;
     private static int mRingerState;
-    private static int mZenState;
-    private BoostFramework mPerf = null;    
+    private static int mZenState;  
     private static int mHwKeysState;
     private static int mAdaptiveBrightness;
 
@@ -263,17 +262,6 @@ public class GamingModeController {
                 Settings.System.NAVIGATION_BAR_SHOW, 1);
         }
 
-        boolean performancemode = Settings.System.getInt(mContext.getContentResolver(),
-                    Settings.System.GAMING_MODE_PERFORMANCE_TOGGLE, 1) == 1;
-        if (performancemode) {
-        if (mPerf == null) {
-            mPerf = new BoostFramework();
-        }
-        if (mPerf != null) {
-            mPerf.perfHint(BoostFramework.VENDOR_HINT_PERFORMANCE_MODE, null, Integer.MAX_VALUE, -1);
-        }
-        }
-
         boolean fpsmode = Settings.System.getInt(mContext.getContentResolver(),
                     Settings.System.GAMING_MODE_FPS_TOGGLE, 1) == 1;
         if (fpsmode) {
@@ -324,11 +312,6 @@ public class GamingModeController {
                 Settings.System.NAVIGATION_BAR_SHOW, mHwKeysState);
         }
 
-        boolean perfmode  = SystemProperties.get("perf.mode.enabled", "0").equals("0");
-        if (perfmode) {
-
-        SystemProperties.set("restart.perf.service", "1");
-        }
         SystemProperties.set("vendor.fps.boost", "false");
 
         int ringerMode = Settings.System.getInt(mContext.getContentResolver(),
