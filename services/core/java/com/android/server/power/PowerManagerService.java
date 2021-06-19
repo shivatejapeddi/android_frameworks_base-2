@@ -138,6 +138,7 @@ public final class PowerManagerService extends SystemService
 
     private static final boolean DEBUG = false;
     private static final boolean DEBUG_SPEW = DEBUG && false;
+    private static final boolean DEBUG_UA = DEBUG && false;
 
     // Message: Sent when a user activity timeout occurs to update the power state.
     private static final int MSG_USER_ACTIVITY_TIMEOUT = 1;
@@ -244,7 +245,7 @@ public final class PowerManagerService extends SystemService
     private static final String TRACE_SCREEN_ON = "Screen turning on";
 
     /** If turning screen on takes more than this long, we show a warning on logcat. */
-    private static final int SCREEN_ON_LATENCY_WARNING_MS = 200;
+    private static final int SCREEN_ON_LATENCY_WARNING_MS = 10;
 
     /** Constants for {@link #shutdownOrRebootInternal} */
     @Retention(RetentionPolicy.SOURCE)
@@ -2549,7 +2550,7 @@ public final class PowerManagerService extends SystemService
                     } else {
                         nextTimeout = mLastUserActivityTime + screenOffTimeout;
                         if (now < nextTimeout) {
-                            if (DEBUG_SPEW) Slog.d(TAG, "updateUserActivitySummaryLocked: dim");
+                            if (DEBUG_UA) Slog.d(TAG, "updateUserActivitySummaryLocked: dim");
                             mUserActivitySummary = USER_ACTIVITY_SCREEN_DIM;
                             if (getWakefulnessLocked() == WAKEFULNESS_AWAKE) {
                                 if (mButtonsLight != null) {
@@ -2570,10 +2571,10 @@ public final class PowerManagerService extends SystemService
                     if (now < nextTimeout) {
                         if (mDisplayPowerRequest.policy == DisplayPowerRequest.POLICY_BRIGHT
                                 || mDisplayPowerRequest.policy == DisplayPowerRequest.POLICY_VR) {
-                            if (DEBUG_SPEW) Slog.d(TAG, "updateUserActivitySummaryLocked: bright no lights");
+                            if (DEBUG_UA) Slog.d(TAG, "updateUserActivitySummaryLocked: bright no lights");
                             mUserActivitySummary = USER_ACTIVITY_SCREEN_BRIGHT;
                         } else if (mDisplayPowerRequest.policy == DisplayPowerRequest.POLICY_DIM) {
-                            if (DEBUG_SPEW) Slog.d(TAG, "updateUserActivitySummaryLocked: dim no lights");
+                            if (DEBUG_UA) Slog.d(TAG, "updateUserActivitySummaryLocked: dim no lights");
                             mUserActivitySummary = USER_ACTIVITY_SCREEN_DIM;
                         }
                     }
@@ -2625,7 +2626,7 @@ public final class PowerManagerService extends SystemService
                 mUserActivitySummary = 0;
             }
 
-            if (DEBUG_SPEW) {
+            if (DEBUG_UA) {
                 Slog.d(TAG, "updateUserActivitySummaryLocked: mWakefulness="
                         + PowerManagerInternal.wakefulnessToString(getWakefulnessLocked())
                         + ", mUserActivitySummary=0x" + Integer.toHexString(mUserActivitySummary)
@@ -3092,14 +3093,16 @@ public final class PowerManagerService extends SystemService
      */
     private boolean updateDisplayPowerStateLocked(int dirty) {
         final boolean oldDisplayReady = mDisplayReady;
-        if ((dirty & (DIRTY_WAKE_LOCKS | /*DIRTY_USER_ACTIVITY |*/ DIRTY_WAKEFULNESS
+        if ((dirty & (DIRTY_WAKE_LOCKS | DIRTY_USER_ACTIVITY | DIRTY_WAKEFULNESS
                 | DIRTY_ACTUAL_DISPLAY_POWER_STATE_UPDATED | DIRTY_BOOT_COMPLETED
                 | DIRTY_SETTINGS | DIRTY_SCREEN_BRIGHTNESS_BOOST | DIRTY_VR_MODE_CHANGED
                 | DIRTY_READER_MODE_CHANGED |
                 DIRTY_QUIESCENT)) != 0) {
             if ((dirty & DIRTY_QUIESCENT) != 0) {
                 sQuiescent = false;
-            }    
+            }
+            int oldDisplayPolicy = mDisplayPowerRequest.policy;
+            int oldDozeScreenState = mDisplayPowerRequest.dozeScreenState;
             mDisplayPowerRequest.policy = getDesiredScreenPolicyLocked();
             int oldDisplayPolicy = mDisplayPowerRequest.policy;
             // Determine appropriate screen brightness and auto-brightness adjustments.
@@ -3175,8 +3178,8 @@ public final class PowerManagerService extends SystemService
                 mDisplayPowerRequest.dozeScreenBrightness =
                         PowerManager.BRIGHTNESS_INVALID_FLOAT;
             }
-               
-            if( mReaderModeRequireDoze && mReaderMode && getWakefulnessLocked() == WAKEFULNESS_AWAKE &&
+                           
+            if( !mPolicy.isKeyguardShowing() && mReaderModeRequireDoze && mReaderMode && getWakefulnessLocked() == WAKEFULNESS_AWAKE &&
                 (mDisplayPowerRequest.policy == DisplayPowerRequest.POLICY_BRIGHT ||
                  mDisplayPowerRequest.policy == DisplayPowerRequest.POLICY_DIM || 
                  mDisplayPowerRequest.policy == DisplayPowerRequest.POLICY_DOZE ) ) {
@@ -3208,7 +3211,7 @@ public final class PowerManagerService extends SystemService
                         + ", dirty=" + Integer.toHexString(dirty));
             }
 
-            if( oldDisplayPolicy != mDisplayPowerRequest.policy ) {
+            /*if( oldDisplayPolicy != mDisplayPowerRequest.policy ) {
         		boolean mode = (mDisplayPowerRequest.policy == DisplayPowerRequest.POLICY_BRIGHT) | 
 			       (mDisplayPowerRequest.policy == DisplayPowerRequest.POLICY_DIM) | 
 			       (mDisplayPowerRequest.policy == DisplayPowerRequest.POLICY_DOZE) | 
@@ -3218,8 +3221,7 @@ public final class PowerManagerService extends SystemService
                 } else {
             		Actions.sendScreenModeChanged(mode);
                 }
-    	    }
-
+    	    }*/
         }
         return mDisplayReady && !oldDisplayReady;
     }
@@ -3332,6 +3334,7 @@ public final class PowerManagerService extends SystemService
             synchronized (mLock) {
                 if (mDisplayState != state) {
                     mDisplayState = state;
+                    setBaikalScreenState(state);
                     setPowerModeInternal(MODE_DISPLAY_INACTIVE,
                             !Display.isActiveState(state));
                     if (state == Display.STATE_OFF) {
@@ -3494,7 +3497,7 @@ public final class PowerManagerService extends SystemService
 
     private boolean isReaderMode() {
         //Slog.i(TAG,"isReaderMode: mReaderMode=" + mReaderMode + ", mIsPowered=" + mIsPowered + ", isBrightOrDim=" + mDisplayPowerRequest.isBrightOrDim());
-        return mReaderMode &&  getWakefulnessLocked() == WAKEFULNESS_AWAKE && /*!mIsPowered && */
+        return !mPolicy.isKeyguardShowing() && mReaderMode &&  getWakefulnessLocked() == WAKEFULNESS_AWAKE && /*!mIsPowered && */
         (mDisplayPowerRequest.policy == DisplayPowerRequest.POLICY_DOZE ||
          mDisplayPowerRequest.policy == DisplayPowerRequest.POLICY_BRIGHT ||
          mDisplayPowerRequest.policy == DisplayPowerRequest.POLICY_DIM);
@@ -4077,6 +4080,31 @@ public final class PowerManagerService extends SystemService
     private boolean setPowerModeInternal(int mode, boolean enabled) {
         // Maybe filter the event.
         return mNativeWrapper.nativeSetPowerMode(mode, enabled);
+    }
+
+    private void setBaikalScreenState(int state) {
+
+
+        switch(state) {
+            case Display.STATE_UNKNOWN:
+                break;
+            case Display.STATE_OFF:
+                Actions.sendScreenModeChanged(false);
+                break;
+            case Display.STATE_ON:
+            case Display.STATE_VR:
+                Actions.sendScreenModeChanged(true);
+                break;
+            case Display.STATE_DOZE:
+            case Display.STATE_DOZE_SUSPEND:
+            case Display.STATE_ON_SUSPEND:
+                if( !mPolicy.isKeyguardShowing() && mReaderMode &&  getWakefulnessLocked() == WAKEFULNESS_AWAKE ) {
+                    Actions.sendScreenModeChanged(true);
+                } else {
+                    Actions.sendScreenModeChanged(false);
+                }
+        }
+
     }
 
     @VisibleForTesting
