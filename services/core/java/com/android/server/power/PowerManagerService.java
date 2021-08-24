@@ -1775,7 +1775,7 @@ public final class PowerManagerService extends SystemService
     }
 
     private boolean userActivityNoUpdateLocked(long eventTime, int event, int flags, int uid) {
-        /*if (DEBUG_SPEW)*/ {
+        if (DEBUG_SPEW) {
             Slog.d(TAG, "userActivityNoUpdateLocked: eventTime=" + eventTime
                     + ", event=" + event + ", flags=0x" + Integer.toHexString(flags)
                     + ", uid=" + uid);
@@ -1879,12 +1879,13 @@ public final class PowerManagerService extends SystemService
             return false;
         }
 
+        Trace.asyncTraceBegin(Trace.TRACE_TAG_POWER, TRACE_SCREEN_ON, 0);
+
+        Trace.traceBegin(Trace.TRACE_TAG_POWER, "wakeUp");
+
         mLastInteractiveHint = SystemClock.elapsedRealtime();
 
         if( isReaderMode() ) scheduleUpdatePowerState(4000);
-
-
-        Trace.traceBegin(Trace.TRACE_TAG_POWER, "wakeUp");
         try {
             Slog.i(TAG, "Waking up from "
                     + PowerManagerInternal.wakefulnessToString(getWakefulnessLocked())
@@ -2201,7 +2202,7 @@ public final class PowerManagerService extends SystemService
                         + ", mBatteryLevel=" + mBatteryLevel);
             }
 
-            if ( (!mIsPoweredInitialized) || wasPowered != mIsPowered || oldPlugType != mPlugType) {
+            if ( !mIsPoweredInitialized || wasPowered != mIsPowered || oldPlugType != mPlugType) {
                 mDirty |= DIRTY_IS_POWERED;
 
                 // Update wireless dock detection state.
@@ -2877,6 +2878,7 @@ public final class PowerManagerService extends SystemService
     private boolean isBeingKeptAwakeLocked() {
         return mStayOn
                 || mProximityPositive
+                || (BaikalSettings.getKeepOn() && (getWakefulnessLocked() == WAKEFULNESS_AWAKE))                
                 || (mWakeLockSummary & WAKE_LOCK_STAY_AWAKE) != 0
                 || (mUserActivitySummary & (USER_ACTIVITY_SCREEN_BRIGHT
                         | USER_ACTIVITY_SCREEN_DIM)) != 0
@@ -3287,10 +3289,12 @@ public final class PowerManagerService extends SystemService
         if ((mWakeLockSummary & WAKE_LOCK_SCREEN_BRIGHT) != 0
                 || (mUserActivitySummary & USER_ACTIVITY_SCREEN_BRIGHT) != 0
                 || !mBootCompleted
+                || (BaikalSettings.getKeepOn() && (getWakefulnessLocked() == WAKEFULNESS_AWAKE))                
                 || mScreenBrightnessBoostInProgress) {
             return DisplayPowerRequest.POLICY_BRIGHT;
         }
 
+        if (DEBUG_SPEW) Slog.d(TAG, "getDesiredScreenPolicyLocked: POLICY_DIM");
         return DisplayPowerRequest.POLICY_DIM;
     }
 
@@ -3435,17 +3439,7 @@ public final class PowerManagerService extends SystemService
         // Enable auto-suspend if needed.
         if (autoSuspend && mDecoupleHalAutoSuspendModeFromDisplayConfig) {
             setHalAutoSuspendModeLocked(true);
-        if( DEBUG ) {
-            Slog.i(TAG,"ReaderMode: autosuspend=" + autoSuspend + 
-        ", mDecoupleHalAutoSuspendModeFromDisplayConfig=" + mDecoupleHalAutoSuspendModeFromDisplayConfig );
         }
-        } else {
-        if( DEBUG ) {
-            Slog.i(TAG,"ReaderMode: autosuspend=" + autoSuspend + 
-        ", mDecoupleHalAutoSuspendModeFromDisplayConfig=" + mDecoupleHalAutoSuspendModeFromDisplayConfig );
-        }
-    }
-
     }
 
     /**
@@ -5591,6 +5585,13 @@ public final class PowerManagerService extends SystemService
 
         @Override // Binder call
         public boolean isDeviceIdleMode() {
+
+            final int uid = Binder.getCallingUid();
+
+            if( BaikalSettings.getHideGmsEnabled() && 
+                com.android.internal.baikalos.Runtime.isGmsUid(uid) ) {
+                return false;
+            }
             final long ident = Binder.clearCallingIdentity();
             try {
                 return isDeviceIdleModeInternal();
@@ -5601,6 +5602,13 @@ public final class PowerManagerService extends SystemService
 
         @Override // Binder call
         public boolean isLightDeviceIdleMode() {
+
+            final int uid = Binder.getCallingUid();
+
+            if( BaikalSettings.getHideGmsEnabled() && 
+                com.android.internal.baikalos.Runtime.isGmsUid(uid) ) {
+                return false;
+            }
             final long ident = Binder.clearCallingIdentity();
             try {
                 return isLightDeviceIdleModeInternal();
@@ -6238,4 +6246,5 @@ public final class PowerManagerService extends SystemService
                    mProximitySensor, SensorManager.SENSOR_DELAY_FASTEST);
         }
     }
+
 }

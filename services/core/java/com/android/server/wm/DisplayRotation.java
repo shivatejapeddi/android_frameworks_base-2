@@ -184,7 +184,6 @@ public class DisplayRotation {
     @Surface.Rotation
     private int mUserRotation = Surface.ROTATION_0;
 
-
     /**
      * Flag that indicates this is a display that may run better when fixed to user rotation.
      */
