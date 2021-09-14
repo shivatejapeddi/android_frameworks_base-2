@@ -3103,7 +3103,6 @@ public final class PowerManagerService extends SystemService
             if ((dirty & DIRTY_QUIESCENT) != 0) {
                 sQuiescent = false;
             }
-            int oldDisplayPolicy = mDisplayPowerRequest.policy;
             int oldDozeScreenState = mDisplayPowerRequest.dozeScreenState;
             mDisplayPowerRequest.policy = getDesiredScreenPolicyLocked();
             int oldDisplayPolicy = mDisplayPowerRequest.policy;
