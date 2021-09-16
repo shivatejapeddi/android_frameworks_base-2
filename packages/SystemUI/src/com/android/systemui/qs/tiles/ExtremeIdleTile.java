@@ -113,7 +113,7 @@ public class ExtremeIdleTile extends QSTileImpl<BooleanState> {
 
     @Override
     public int getMetricsCategory() {
-        return MetricsEvent.EXTENSIONS;
+        return MetricsEvent.CUSTOM_TILE;
     }
 
     private ContentObserver mObserver = new ContentObserver(mHandler) {
