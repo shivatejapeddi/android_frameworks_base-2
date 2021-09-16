@@ -34,6 +34,8 @@ import android.provider.DeviceConfig;
 import android.system.ErrnoException;
 import android.system.Os;
 import android.util.Log;
+import android.os.Build;
+import java.lang.reflect.Field;
 
 import dalvik.annotation.optimization.FastNative;
 import dalvik.system.ZygoteHooks;
@@ -293,6 +295,9 @@ public final class Zygote {
      */
     public static final String USAP_POOL_SECONDARY_SOCKET_NAME = "usap_pool_secondary";
 
+    private static final boolean PRODUCT_NEEDS_MODEL_EDIT =
+            SystemProperties.getBoolean("ro.product.needs_model_edit", false);
+            
     private Zygote() {}
 
     private static boolean containsInetGid(int[] gids) {
@@ -794,6 +799,7 @@ public final class Zygote {
 
     private static native void nativeBoostUsapPriority();
 
+
     public static void setBuildField(String loggingTag, String key, String value) {
         /*
          * This would be much prettier if we just removed "final" from the Build fields,
@@ -816,7 +822,7 @@ public final class Zygote {
             Log.e(loggingTag, "Failed to spoof Build." + key, e);
         }
     }
-
+    
     private static void maybeSpoofBuild(String packageName, String loggingTag) {
         // Set device model to defy NGA in Google Assistant
         if (PRODUCT_NEEDS_MODEL_EDIT &&
