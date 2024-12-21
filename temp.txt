@@ -1,0 +1,12 @@
+public boolean isDefault() {
+        if( mBrightness == 0 &&
+                !mReader &&
+                !mPinned &&
+                !mStamina &&
+                !mRequireGms &&
+                mFrameRate == 0 &&
+                mBackground == 0 &&
+                mPerfProfile.equals("default") &&
+                mThermalProfile.equals("default") ) return true;
+        return false;
+    }
